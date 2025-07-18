@@ -1,127 +1,186 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-DEE2FHRHF6"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-DEE2FHRHF6');
-</script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recordatorios y pagos con Nequi</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simulación Nequi</title>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
-      font-family: 'Inter', sans-serif;
-      background-color: #f8f9fa;
-      color: #212529;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
     }
-    header {
-      background-color: #5B2BE0;
+
+    body {
+      background-color: #8c52ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .phone {
+      width: 360px;
+      height: 720px;
+      border: 16px solid #333;
+      border-radius: 36px;
+      background-color: white;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+      position: relative;
+    }
+
+    .screen {
+      padding: 20px;
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    .btn {
+      background-color: #8c52ff;
       color: white;
-      padding: 60px 20px;
-      text-align: center;
-    }
-    header h1 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-    }
-    header p {
-      font-size: 1.2rem;
-    }
-    .cta-button {
-      margin-top: 20px;
-      background-color: #FFC107;
-      color: black;
-      padding: 15px 30px;
-      font-weight: 600;
+      padding: 12px 20px;
       border: none;
-      border-radius: 30px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-size: 16px;
       cursor: pointer;
     }
-    .section {
-      padding: 60px 20px;
-      max-width: 800px;
-      margin: auto;
-    }
-    .section h2 {
-      font-size: 2rem;
-      margin-bottom: 20px;
-    }
-    .benefits-list li {
-      margin: 10px 0;
-      font-size: 1.1rem;
-    }
-    .testimonial {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
-    footer {
-      background-color: #343a40;
-      color: white;
+
+    h2 {
+      margin-bottom: 10px;
       text-align: center;
-      padding: 40px 20px;
+    }
+
+    input {
+      padding: 10px;
+      width: 80%;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .services {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .service {
+      background-color: #f3f3f3;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .logo {
+      font-size: 32px;
+      font-weight: bold;
+      color: #8c52ff;
+      margin-bottom: 20px;
+    }
+
+    .success {
+      font-size: 20px;
+      color: green;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-    <script>
-    function mostrarMensaje() {
-       gtag('event', 'recibir_recordatorio', {
-          content_type: 'cta_button',
-          content_id: '1', // ej: 'hero_main' o 'contact_section_cta'
-        });
-      alert("Estás suscrito! Te enviaremos recordatorios!");
+  <div class="phone">
+    <!-- Recordatorio -->
+    <div class="screen active" id="reminderScreen">
+      <div class="logo">Nequi</div>
+      <h2>Tienes un nuevo recordatorio 📢</h2>
+      <p>Factura de servicios por $50.000</p>
+      <button class="btn" onclick="goToLogin()">Ver factura</button>
+    </div>
+
+    <!-- Login -->
+    <div class="screen" id="loginScreen">
+      <div class="logo">Nequi</div>
+      <h2>Ingresa a tu cuenta</h2>
+      <input type="text" placeholder="Usuario" id="user">
+      <input type="password" placeholder="Contraseña" id="pass">
+      <button class="btn" onclick="login()">Entrar</button>
+    </div>
+
+    <!-- Servicios -->
+    <div class="screen" id="servicesScreen">
+      <div class="logo">Nequi</div>
+      <h2>¿Qué quieres hacer?</h2>
+      <div class="services">
+        <div class="service">Enviar plata</div>
+        <div class="service">Recargar</div>
+        <div class="service" onclick="goToBill()">Pagar factura</div>
+        <div class="service">Ver movimientos</div>
+      </div>
+    </div>
+
+    <!-- Factura -->
+    <div class="screen" id="billScreen">
+      <div class="logo">Nequi</div>
+      <h2>Factura pendiente</h2>
+      <p>💡 Servicios públicos</p>
+      <p>Monto: $50.000</p>
+      <button class="btn" onclick="payBill()">Pagar ahora</button>
+    </div>
+
+    <!-- Confirmación -->
+    <div class="screen" id="successScreen">
+      <div class="logo">Nequi</div>
+      <h2 class="success">✅ Factura pagada con éxito</h2>
+    </div>
+  </div>
+
+  <script>
+    const screens = {
+      reminder: document.getElementById("reminderScreen"),
+      login: document.getElementById("loginScreen"),
+      services: document.getElementById("servicesScreen"),
+      bill: document.getElementById("billScreen"),
+      success: document.getElementById("successScreen")
+    };
+
+    function showScreen(screenId) {
+      Object.values(screens).forEach(screen => screen.classList.remove("active"));
+      screens[screenId].classList.add("active");
+    }
+
+    function goToLogin() {
+      showScreen("login");
+    }
+
+    function login() {
+      const user = document.getElementById("user").value;
+      const pass = document.getElementById("pass").value;
+      if (user && pass) {
+        showScreen("services");
+      } else {
+        alert("Por favor ingresa tus datos");
+      }
+    }
+
+    function goToBill() {
+      showScreen("bill");
+    }
+
+    function payBill() {
+      showScreen("success");
     }
   </script>
-  <header>
-    <h1>Evita cortes, olvidos y recargos</h1>
-    <p>Recibe alertas y paga tus servicios a tiempo desde Nequi</p>
-    <button class="cta-button" onclick="mostrarMensaje()">Recibir recordatorios gratis</button>
-  </header>
-
-  <section class="section">
-    <h2>¿Olvidaste pagar el gas o Netflix otra vez?</h2>
-    <p>Con tantos correos y facturas digitales, es fácil olvidarse. Un corte o recargo no tiene que ser parte de tu mes.</p>
-  </section>
-
-  <section class="section">
-    <h2>Con Nequi puedes:</h2>
-    <ul class="benefits-list">
-      <li>🔔 Recibir notificaciones antes de cada vencimiento</li>
-      <li>💳 Pagar tus servicios desde el celular con 1 clic</li>
-      <li>⚡ Activar pagos automáticos o con recordatorio</li>
-      <li>📅 Ver tus fechas de pago en una agenda visual</li>
-      <li>💰 Evitar recargos por pagos tardíos</li>
-    </ul>
-  </section>
-
-  <section class="section">
-    <h2>Paga a tiempo y gana recompensas</h2>
-    <p>Gana NequiPuntos, descuentos o participa en sorteos mensuales por cada factura pagada a tiempo.</p>
-  </section>
-
-  <section class="section">
-    <h2>Lo que dicen nuestros usuarios</h2>
-    <div class="testimonial">
-      <p>“Se me olvidaba siempre pagar el gas, hasta que activé los recordatorios. ¡No más sustos!”<br><strong>– Camila, Bogotá</strong></p>
-    </div>
-    <div class="testimonial">
-      <p>“Esto de que me avise antes de que se me acabe la plata para pagar Netflix es lo máximo.”<br><strong>– Juan, Medellín</strong></p>
-    </div>
-  </section>
-
-  <footer>
-    <h2>Activa tus recordatorios de pago ahora</h2>
-    <button class="cta-button">Quiero probarlo ya</button>
-  </footer>
 </body>
 </html>
