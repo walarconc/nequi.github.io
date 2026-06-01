@@ -21,11 +21,6 @@
  button.secondary{background:#64748b}
  .score{font-weight:700;margin-left:6px}
  .row-actions{display:flex;gap:8px;align-items:center}
- .filter-bar{display:flex;align-items:center;gap:8px;margin-top:.5rem;flex-wrap:wrap}
- .filter-bar label{color:#333;font-size:.9rem;font-weight:600;white-space:nowrap}
- .filter-bar input[type=text]{border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:.9rem;width:280px;outline:none}
- .filter-bar input[type=text]:focus{border-color:#2563eb;box-shadow:0 0 0 2px #bfdbfe}
- .filter-info{font-size:.85rem;color:#64748b;margin-left:4px}
 </style>
 </head>
 <body>
@@ -36,13 +31,6 @@
     <button id="resetAll" class="secondary">Limpiar selecciones</button>
     <button id="shuffleBtn" class="secondary">Barajar preguntas</button>
     <span class="score" id="score"></span>
-    <div class="filter-bar">
-      <label for="filterInput">&#128269; Filtrar por ID de pregunta (separados por coma):</label>
-      <input type="text" id="filterInput" placeholder="Ej: 1, 5, 12, 34" />
-      <button id="applyFilter">Aplicar filtro</button>
-      <button id="clearFilter" class="secondary">Ver todas</button>
-      <span class="filter-info" id="filterInfo"></span>
-    </div>
   </div>
   <div id="quiz"></div>
 <script>
@@ -449,16 +437,10 @@ let data = [
 
  ];
 const quizEl = document.getElementById('quiz');
-let activeData = null;
-
-function getDisplayData(){
-  return activeData !== null ? activeData : data;
-}
 
 function render(){
   quizEl.innerHTML = '';
-  const displayData = getDisplayData();
-  displayData.forEach((q, qi) => {
+  data.forEach((q, qi) => {
     const wrapper = document.createElement('div');
     wrapper.className = 'q';
     wrapper.dataset.idx = qi;
@@ -526,13 +508,12 @@ function checkOne(i){
 
 function checkAll(){
   let correct = 0;
-  const displayData = getDisplayData();
-  displayData.forEach((_, i) => {
+  data.forEach((_, i) => {
     const before = document.querySelectorAll('.q')[i].classList.contains('correct');
     checkOne(i);
     if(document.querySelectorAll('.q')[i].classList.contains('correct')) correct++;
   });
-  document.getElementById('score').textContent = `Puntaje: ${correct} / ${getDisplayData().length}`;
+  document.getElementById('score').textContent = `Puntaje: ${correct} / ${data.length}`;
 }
 
 function resetAll(){
@@ -557,40 +538,10 @@ function shuffle(){
   render();
 }
 
-function applyFilter(){
-  const val = document.getElementById('filterInput').value.trim();
-  if(!val){
-    activeData = null;
-    document.getElementById('filterInfo').textContent = '';
-    render();
-    return;
-  }
-  const ids = val.split(',').map(s => s.trim()).filter(Boolean);
-  activeData = data.filter(q => ids.includes(String(q.QuestionId)));
-  const found = activeData.length;
-  document.getElementById('filterInfo').textContent = `Mostrando ${found} de ${data.length} preguntas`;
-  if(found === 0){
-    document.getElementById('filterInfo').textContent = 'No se encontraron preguntas con esos IDs.';
-  }
-  document.getElementById('score').textContent = '';
-  render();
-}
-
-function clearFilter(){
-  activeData = null;
-  document.getElementById('filterInput').value = '';
-  document.getElementById('filterInfo').textContent = '';
-  document.getElementById('score').textContent = '';
-  render();
-}
-
 render();
 document.getElementById('checkAll').addEventListener('click', checkAll);
 document.getElementById('resetAll').addEventListener('click', resetAll);
 document.getElementById('shuffleBtn').addEventListener('click', shuffle);
-document.getElementById('applyFilter').addEventListener('click', applyFilter);
-document.getElementById('clearFilter').addEventListener('click', clearFilter);
-document.getElementById('filterInput').addEventListener('keydown', e => { if(e.key==='Enter') applyFilter(); });
 </script>
 </body>
 </html>
