@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Simulador ServiceNow CSA – Por pregunta</title>
+<style>
+ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:20px;line-height:1.45}
+ h1{font-size:1.8rem;margin:0 0 .25rem}
+ .meta{color:#555;margin-bottom:1rem}
+ .q{border:1px solid #e0e0e0;border-radius:10px;padding:12px 14px;margin:12px 0}
+ .q.correct{border-color:#2e7d32;background:#e8f5e9}
+ .q.incorrect{border-color:#c62828;background:#ffebee}
+ .q h3{margin:.1rem 0 .4rem;font-size:1.05rem}
+ .opts{margin:6px 0 8px 8px}
+ label{display:block;margin:.3rem 0;cursor:pointer}
+ .result{font-weight:600;margin-top:6px}
+ .controls{position:sticky;top:0;background:#fff;padding:.6rem 0;border-bottom:1px solid #eee;z-index:10}
+ button{background:#2563eb;border:none;color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;margin-right:8px}
+ button.secondary{background:#64748b}
+ .score{font-weight:700;margin-left:6px}
+ .row-actions{display:flex;gap:8px;align-items:center}
+</style>
+</head>
+<body>
+  <h1>Simulador de examen: ServiceNow CSA</h1>
+  <div class="meta">Cada pregunta tiene su botón <b>Validar</b>. También puedes usar el botón global para calificar todas.</div>
+  <div class="controls">
+    <button id="checkAll">Revisar todas</button>
+    <button id="resetAll" class="secondary">Limpiar selecciones</button>
+    <button id="shuffleBtn" class="secondary">Barajar preguntas</button>
+    <span class="score" id="score"></span>
+  </div>
+  <div id="quiz"></div>
+<script>
+let data = [
+
+{"QuestionId":"181" ,"prompt":"Which ServiceNow resource is a framework that ensures the data your ServiceNow application requires maps correctly to the appropriate CMDB tables?","options":[{"key":"A","text":"Common Service Data Model (CSDM)"},{"key":"B","text":"Service Mapping Utility (SMU)"},{"key":"C","text":"Service Schema Map (SSM)"},{"key":"D","text":"CMDB Class Manager (CMDBCM)"},{"key":"E","text":"CI Class Manager (CICM)"}],"answer":["A"],"multi":false},
+{"QuestionId":"182" ,"prompt":"What do you install when you want to add applications or functionality within your development instance?","options":[{"key":"A","text":"App Package"},{"key":"B","text":"Updated Pack"},{"key":"C","text":"Patch"},{"key":"D","text":"Plugin"},{"key":"E","text":"App Updated Set"}],"answer":["D"],"multi":false},
+{"QuestionId":"183" ,"prompt":"What field contains a record’s 32-character, unique identifier?","options":[{"key":"A","text":"sn_rec_id"},{"key":"B","text":"rec_id"},{"key":"C","text":"u_id"},{"key":"D","text":"sys_id"},{"key":"E","text":"sn_gu_id"},{"key":"F","text":"sn_sys_id"}],"answer":["D"],"multi":false},
+{"QuestionId":"184" ,"prompt":"Your company is giving all first line workers a special T-shirt as a recognition for their hard work. Management team wants a way for employees to order the T-shirt, with the ability to specify the preferred size and color. How would you ensure that only first line workers (non-managers) can submit the order?","options":[{"key":"A","text":"Create Record Producer and use the Available For list to specify First Line [sn_first_line] role"},{"key":"B","text":"Create Catalog Item and use the Not Available list to specify the Manager Group"},{"key":"C","text":"Create Catalog Item and use the Available For list to specify ITIL [itil] role"},{"key":"D","text":"Create Order Guide and use the User Criteria list to specify First Line [sn_first_line] role"}],"answer":["B"],"multi":false},
+{"QuestionId":"185" ,"prompt":"What is used frequently to move customizations from one instance to another?","options":[{"key":"A","text":"Update Sets"},{"key":"B","text":"Code Sets"},{"key":"C","text":"Update Packs"},{"key":"D","text":"Configuration Logs"},{"key":"E","text":"Remote Sets"},{"key":"F","text":"Local Sets"}],"answer":["A"],"multi":false},
+{"QuestionId":"186" ,"prompt":"What icon do you use to change the label on a Favorite?","options":[{"key":"A","text":"Clock"},{"key":"B","text":"Hamburger"},{"key":"C","text":"Pencil"},{"key":"D","text":"Three dots"},{"key":"E","text":"Triangle"},{"key":"F","text":"Star"}],"answer":["C"],"multi":false},
+{"QuestionId":"187" ,"prompt":"What feature can track the amount of time that a task has been open, to ensure that tasks are completed within an allotted time?","options":[{"key":"A","text":"Task Escalation Clock"},{"key":"B","text":"Service Level Agreements"},{"key":"C","text":"Inactivity Monitor"},{"key":"D","text":"Response Time Clock"},{"key":"E","text":"Business Time Remaining"}],"answer":["B"],"multi":false},
+{"QuestionId":"188" ,"prompt":"What is a quick way to create a report from a list view?","options":[{"key":"A","text":"Click on filter breadcrumb, drag and drop on the Report > Create New module"},{"key":"B","text":"Click Funnel, define filter conditions, click Create Report"},{"key":"C","text":"Click Context Menu, select Create Report"},{"key":"D","text":"Apply filter, right click on column header, select Bar Chart"},{"key":"E","text":"Apply filter, right click on column header, select Create Report"}],"answer":["D"],"multi":false},
+{"QuestionId":"189" ,"prompt":"What import utility do you use when the field names on the import set match the name of the fields on the Target table?","options":[{"key":"A","text":"Schema Mapping"},{"key":"B","text":"Automatic Mapping"},{"key":"C","text":"Mapping Assist"},{"key":"D","text":"Mapping Dashboard"}],"answer":["B"],"multi":false},
+{"QuestionId":"190" ,"prompt":"As an IT employee what interface would you use, if you wanted to browse internal IT documentation, like troubleshooting scripts and FAQs?","options":[{"key":"A","text":"Knowledge"},{"key":"B","text":"ServiceNow Wiki"},{"key":"C","text":"Knowledge Now"},{"key":"D","text":"SharePoint"},{"key":"E","text":"Stack Overflow"}],"answer":["A"],"multi":false},
+{"QuestionId":"191" ,"prompt":"A new Service Desk employee in Latin America complains that the create dates and times are incorrect on their Incident list. What would you suggest to fix this issue?","options":[{"key":"A","text":"Have them clear their cache."},{"key":"B","text":"Have them use the gear icon to set the employee's time zone."},{"key":"C","text":"Recommend they use Chrome, instead of Explorer."},{"key":"D","text":"Use the system properties to correct the instance's time zone."},{"key":"E","text":"Have them correct the time zone on their computer."}],"answer":["B"],"multi":false},
+{"QuestionId":"192" ,"prompt":"When testing a catalog item, having a manager approval flows, which of these best practices would you follow? (Choose three.)","options":[{"key":"A","text":"Make sure the latest flows are activated."},{"key":"B","text":"Use the instance Incognito setting to quickly toggle between requester and approver."},{"key":"C","text":"Impersonate the requester to ensure the form works."},{"key":"D","text":"Make sure the requester's user record has a manager specified."},{"key":"E","text":"Create and select your Testing Update Set, before starting the test cases."},{"key":"F","text":"Use your Admin account, so you can approve the items quickly."}],"answer":["A","C","D"],"multi":true},
+{"QuestionId":"193" ,"prompt":"What is a no-code approach to control the mandatory or read-only state of a form field?","options":[{"key":"A","text":"UI Action"},{"key":"B","text":"Client Script"},{"key":"C","text":"UI Script"},{"key":"D","text":"UI Rule"},{"key":"E","text":"UI Policy"}],"answer":["E"],"multi":false},
+{"QuestionId":"194" ,"prompt":"When moving multiple update sets at one time, what might you do to facilitate the move?","options":[{"key":"A","text":"Batch"},{"key":"B","text":"Verify"},{"key":"C","text":"Test"},{"key":"D","text":"Preview"}],"answer":["A"],"multi":false},
+{"QuestionId":"195" ,"prompt":"What is specified in an Access Control rule?","options":[{"key":"A","text":"Groups, Conditional Expressions and Workflows"},{"key":"B","text":"Table Schema, CRUD, and User Authentication"},{"key":"C","text":"Object and Operation being secured; Permissions required to access the object"},{"key":"D","text":"security_admin"}],"answer":["C"],"multi":false},
+{"QuestionId":"196" ,"prompt":"Which icon would you double click, to expand and collapse the list of all Applications and Modules?","options":[{"key":"A","text":"Star"},{"key":"B","text":"Clock"},{"key":"C","text":"Application"},{"key":"D","text":"Funnel"}],"answer":["C"],"multi":false},
+{"QuestionId":"197" ,"prompt":"What do you call any component that needs to be managed in order to deliver services?","options":[{"key":"A","text":"CSDM Items"},{"key":"B","text":"CMDB"},{"key":"C","text":"Configuration item"},{"key":"D","text":"Service Offerings"},{"key":"E","text":"Asset"}],"answer":["C"],"multi":false},
+{"QuestionId":"198" ,"prompt":"A new service catalog item is being developed, but should only be visible to managers inside the HR Department. What method would you use to fulfill this requirement?","options":[{"key":"A","text":"Specify the Dept_Mgr role on the catalog content block"},{"key":"B","text":"Add the Department Manager group to the catalog item’s user criteria"},{"key":"C","text":"Add the Department Manager group to the catalog item’s ACL"},{"key":"D","text":"Only publish the item in the HR service catalog"},{"key":"E","text":"Use a Dept_Mgr ACL on the HR service catalog"}],"answer":["B"],"multi":false},
+{"QuestionId":"199" ,"prompt":"A user wants to create a set of filter conditions, where they want to show records which satisfy two conditions: Incidents where the state is Closed, and Incidents where Assignment Group is Network. After clicking the Funnel icon, what should the user do?","options":[{"key":"A","text":"Define the first condition; click AND button; define second condition; click Run"},{"key":"B","text":"Define the first condition; click AND button; define second condition; press enter"},{"key":"C","text":"Define the first condition; click OR button; define second condition; press enter"},{"key":"D","text":"Define the first condition; click > icon on breadcrumb, define second condition; click Run"},{"key":"E","text":"Define the first condition; click > icon on breadcrumb, define second condition; press enter"}],"answer":["A"],"multi":false},
+{"QuestionId":"200" ,"prompt":"Access Control rules are applied to a specific table, like the Incident table. What is the object name for a rule that is specific to the Incident table and the Major Incident field?","options":[{"key":"A","text":"Incident.Major_Incident"},{"key":"B","text":"incident=>major_incident"},{"key":"C","text":"incident<=major_incident"},{"key":"D","text":"incident||major_incident"},{"key":"E","text":"incident.major_incident"}],"answer":["E"],"multi":false},
+{"QuestionId":"201" ,"prompt":"Two departments (HR Onboarding and Facilities) have come to you, asking for a way for employees to request event room set up services. The requirements are the same for the form and the task routing to the Facilities’ assignment group. For HR, the item will be used primarily for the Onboarding coordinators, for employee orientation sessions. For Facilities, the item will be used for anyone in the company who needs room set up services. However, both departments have their own service catalogs. What do you do, to support these requirements?","options":[{"key":"A","text":"Create one Catalog Item for HR Event Room Set Up and one for Facilities Event Room Set Up; then publish each to the appropriate Catalog."},{"key":"B","text":"Create one Catalog Item for Event Room Set Up; then publish to both Catalogs."},{"key":"C","text":"Create one Catalog Item for Event Room Set Up; then publish to the Parent Catalog, which is accessible to both HR and Facilities."},{"key":"D","text":"Create one Catalog Item for Event Room Set Up; then use ACLs to control access."}],"answer":["B"],"multi":false},
+{"QuestionId":"202" ,"prompt":"After finishing your work on High Security Settings, what do you do to return to normal admin security levels?","options":[{"key":"A","text":"Select Normal role"},{"key":"B","text":"Log out and back in"},{"key":"C","text":"Use System Administration > Normal Security module"},{"key":"D","text":"Select Global Update Set"},{"key":"E","text":"End Impersonation"}],"answer":["B"],"multi":false},
+{"QuestionId":"203" ,"prompt":"What type of field allows you to look up values from one other table?","options":[{"key":"A","text":"Reference"},{"key":"B","text":"Verity"},{"key":"C","text":"Options"},{"key":"D","text":"Selections"},{"key":"E","text":"Dot walk"},{"key":"F","text":"Lookup"}],"answer":["A"],"multi":false},
+{"QuestionId":"204" ,"prompt":"Which module would you use to create a new automation of business logic such as approvals, tasks, and notifications?","options":[{"key":"A","text":"Process Automation > Flow Designer"},{"key":"B","text":"Process Automation > Flow Administration"},{"key":"C","text":"Process Automation > Workflow Editor"},{"key":"D","text":"Process Automation > Process Flow"},{"key":"E","text":"Process Automation > Active Flows"}],"answer":["A"],"multi":false},
+{"QuestionId":"205" ,"prompt":"A department manager asks an analyst to build some reports. Where do you recommend the analyst start?","options":[{"key":"A","text":"Report Dashboard > Create New"},{"key":"B","text":"Reports > Getting Started"},{"key":"C","text":"Performance Analytics > Reports"},{"key":"D","text":"Self-Service > Reports"},{"key":"E","text":"Reports > Create New"}],"answer":["E"],"multi":false},
+{"QuestionId":"206" ,"prompt":"What are the steps for applying an update set to an instance?","options":[{"key":"A","text":"Retrieve, Preview, Commit"},{"key":"B","text":"Specify, Transform, Apply"},{"key":"C","text":"Retrieve, Assess, Apply"},{"key":"D","text":"Get, Test, Push"},{"key":"E","text":"Pull, Review, Push"}],"answer":["A"],"multi":false},
+{"QuestionId":"207" ,"prompt":"When importing spreadsheet data into ServiceNow, in which step does the data get written to the receiving table?","options":[{"key":"A","text":"Run Transform"},{"key":"B","text":"Run Import"},{"key":"C","text":"Import Dataset"},{"key":"D","text":"Execute Transform"},{"key":"E","text":"Schedule Transform"}],"answer":["A"],"multi":false},
+{"QuestionId":"208" ,"prompt":"What action would an administrator perform on a list, if they wanted to show the records in groups based on the Category column?","options":[{"key":"A","text":"On the list Context Menu, select Group By > Category"},{"key":"B","text":"On the Filter Menu, select Group By > Category"},{"key":"C","text":"Select the Group icon, then select Category"},{"key":"D","text":"On Filter Navigator, type group.category and press enter"},{"key":"E","text":"On the Category column title, select the Context menu > Group By Category"}],"answer":["A","E"],"multi":true},
+{"QuestionId":"209" ,"prompt":"Which collaboration tool is available from the banner, using the bubble icon?","options":[{"key":"A","text":"Now Messenger"},{"key":"B","text":"Agent Chat"},{"key":"C","text":"Connect Chat"},{"key":"D","text":"Collaborate Now"},{"key":"E","text":"Live Feed"}],"answer":["C"],"multi":false},
+{"QuestionId":"210" ,"prompt":"On the knowledge base record, which tab would you use to define which users are not able to write articles to the knowledge base?","options":[{"key":"A","text":"Can Contribute"},{"key":"B","text":"Cannot Author"},{"key":"C","text":"Cannot Contribute"},{"key":"D","text":"Cannot Write"},{"key":"E","text":"Read Only"}],"answer":["C"],"multi":false},
+{"QuestionId":"211","prompt":"Which features allow you to update multiple records at one time? (Choose two.)","options":[{"key":"A","text":"List Editor"},{"key":"B","text":"Field Update Action"},{"key":"C","text":"Bulk Record Update"},{"key":"D","text":"Data Remediation Dashboard"},{"key":"E","text":"Update Selected Action"}],"answer":["A","E"],"multi":true},
+{"QuestionId":"212","prompt":"Categories in the knowledge base, by default, can be created and edited by which knowledge workers? (Choose two.)","options":[{"key":"A","text":"Knowledge Authors"},{"key":"B","text":"Knowledge Contributors"},{"key":"C","text":"Knowledge Controller"},{"key":"D","text":"Knowledge Managers"},{"key":"E","text":"Knowledge Category Managers"},{"key":"F","text":"Knowledge Submitters"}],"answer":["B","D"],"multi":true},
+{"QuestionId":"213","prompt":"Which collaboration tool opens a sidebar and allows you to create new conversations with other ServiceNow users?","options":[{"key":"A","text":"Skype Now"},{"key":"B","text":"Collaborate Now"},{"key":"C","text":"Agent Messenger"},{"key":"D","text":"Agent Chat"},{"key":"E","text":"Connect Chat"}],"answer":["E"],"multi":false},
+{"QuestionId":"214","prompt":"What module would you use if you wanted to view a list of all of the fields on the Incident table? (Choose two.)","options":[{"key":"A","text":"Tables & Columns"},{"key":"B","text":"Dictionary"},{"key":"C","text":"Data Class Manager"},{"key":"D","text":"Dictionary Dashboard"},{"key":"E","text":"Database View"},{"key":"F","text":"Schema"}],"answer":["A","B"],"multi":true},
+{"QuestionId":"215","prompt":"What component causes a flow to run after a record has been created or updated?","options":[{"key":"A","text":"Date-based trigger"},{"key":"B","text":"On-change trigger"},{"key":"C","text":"Record-based trigger"},{"key":"D","text":"Application-based trigger"},{"key":"E","text":"Updated-date trigger"}],"answer":["C"],"multi":false},
+{"QuestionId":"216","prompt":"What type of field is Boolean and appears as a check box?","options":[{"key":"A","text":"Yes/No"},{"key":"B","text":"True/False"},{"key":"C","text":"On/Off"},{"key":"D","text":"Binary"},{"key":"E","text":"0/1"}],"answer":["B"],"multi":false},
+{"QuestionId":"217","prompt":"Which module is used to access the knowledge bases which are available to you?","options":[{"key":"A","text":"Knowledge > Home"},{"key":"B","text":"Self Service > Knowledge"},{"key":"C","text":"Knowledge > All"},{"key":"D","text":"Knowledge > Knowledge Bases"},{"key":"E","text":"Knowledge > Overview"}],"answer":["B"],"multi":false},
+{"QuestionId":"218","prompt":"A customer requests the following data quality measures be added: \n\n1. Incident numbers should be read only, on all lists and forms, for all users. \n2. Short Description field should be mandatory, on all records, across all applications, on Insert. \n\nWhich type of policy would you use to meet this requirement?","options":[{"key":"A","text":"Data Quality Policy"},{"key":"B","text":"Dictionary Design Policy"},{"key":"C","text":"UI Data Policy"},{"key":"D","text":"UI Policy"},{"key":"E","text":"Field Criteria Policy"},{"key":"F","text":"Data Policy"}],"answer":["F"],"multi":false},
+{"QuestionId":"219","prompt":"What type of user (persona) has clearly defined paths and workflows in the platform and have one or more roles (ie itil and approver_user)?","options":[{"key":"A","text":"Workflow User"},{"key":"B","text":"Request Fulfiller"},{"key":"C","text":"ITSM User"},{"key":"D","text":"Approving Manager"},{"key":"E","text":"Service Desk User"},{"key":"F","text":"Process User"}],"answer":["F"],"multi":false},
+{"QuestionId":"220","prompt":"Which module would you use to customize your instances banner image, text and colors?","options":[{"key":"A","text":"System UI > UI Pages > Branding"},{"key":"B","text":"Service Portal > Portals > Branding"},{"key":"C","text":"System Properties > Basic Configuration UI16"},{"key":"D","text":"System Properties > Branding"},{"key":"E","text":"Homepage Admin > Pages > Branding"}],"answer":["C"],"multi":false},
+{"QuestionId":"221","prompt":"Which database provides a logical model of your company infrastructure by identifying, controlling, maintaining and verifying CIs that exist?","options":[{"key":"A","text":"IMDB"},{"key":"B","text":"ITSM"},{"key":"C","text":"CSDM"},{"key":"D","text":"CMDB"},{"key":"E","text":"LDAP"}],"answer":["D"],"multi":false},
+{"QuestionId":"222","prompt":"Which module is used as the first step for importing data?","options":[{"key":"A","text":"Coalesce Data"},{"key":"B","text":"Transform Data"},{"key":"C","text":"Import Data"},{"key":"D","text":"Load Data"}],"answer":["D"],"multi":false},
+{"QuestionId":"223","prompt":"When you need to orchestrate business processes across services with little technical user knowledge, which utility would you use?","options":[{"key":"A","text":"Flow Manager"},{"key":"B","text":"Flow Designer"},{"key":"C","text":"Flow Editor"},{"key":"D","text":"Workflow Editor"},{"key":"E","text":"Workflow Designer"}],"answer":["B"],"multi":false},
+{"QuestionId":"224","prompt":"When a user reports that they are not able to see modules on the application navigator, what can you do, to see what modules are visible to them?","options":[{"key":"A","text":"Look up their password, so you can login with their account"},{"key":"B","text":"Initiate a Connect Chat session"},{"key":"C","text":"Install the Bomgar plug-in"},{"key":"D","text":"Impersonate the user"},{"key":"E","text":"Launch a NowChat window"}],"answer":["D"],"multi":false},
+{"QuestionId":"225","prompt":"What is a key difference between Reporting and Performance Analytics?","options":[{"key":"A","text":"Performance Analytics contains snapshots of data taken over time; Reporting shows only the data as it is, at the moment the report is run."},{"key":"B","text":"Performance Analytics can show trends; Reports cannot."},{"key":"C","text":"Reports can be run on a scheduled basis; Performance Analytics cannot."},{"key":"D","text":"Performance Analytics data can be published to Dashboards; Reports cannot."},{"key":"E","text":"Performance Analytics shows KPIs; Reporting does not."}],"answer":["A"],"multi":false},
+{"QuestionId":"226","prompt":"While showing a customer their incident form, they ask to change the Priority values to display their internal terminology P1, P2, P3, P4. They want it to be consistent across all Tasks. How would you do that?","options":[{"key":"A","text":"Configure Lists"},{"key":"B","text":"Show Options"},{"key":"C","text":"Configure Task"},{"key":"D","text":"Show Choices"},{"key":"E","text":"Show Choice List"},{"key":"F","text":"Configure Options"}],"answer":["E"],"multi":false},
+{"QuestionId":"227","prompt":"Your customer would like to create a new template to notify users who are affected by network outages at their site. Which module would you use to create a new notification?","options":[{"key":"A","text":"System Notification > Email > Notifications"},{"key":"B","text":"Administration > Notification Overview"},{"key":"C","text":"System Properties > Email > Settings"},{"key":"D","text":"User Preferences > Email > Notifications"},{"key":"E","text":"Click Gear > Notifications > New"}],"answer":["A"],"multi":false},
+{"QuestionId":"228","prompt":"When designing a flow, how do you reference data from a record, in that flow?","options":[{"key":"A","text":"Drag the table icon onto the flow definition"},{"key":"B","text":"Use the condition builder to specify the desired values"},{"key":"C","text":"Specify the source table on the data pill related list"},{"key":"D","text":"Drag the data pill onto the flow definition"},{"key":"E","text":"Add the table reference using the slush bucket"}],"answer":["D"],"multi":false},
+{"QuestionId":"229","prompt":"Which tool is used to define relationships between fields in an import set table and a target table?","options":[{"key":"A","text":"Transform Schema"},{"key":"B","text":"Schema Map"},{"key":"C","text":"Dictionary Map"},{"key":"D","text":"Transform Map"},{"key":"E","text":"Field Transformer"},{"key":"F","text":"Import Designer"}],"answer":["D"],"multi":false},
+{"QuestionId":"230","prompt":"Which ServiceNow capability provides assistance to help users obtain information, make decisions, and perform common work tasks via a messaging interface?","options":[{"key":"A","text":"Agent Workspace"},{"key":"B","text":"Chat bot"},{"key":"C","text":"Virtual Agent"},{"key":"D","text":"Knowledge Chat"},{"key":"E","text":"Now Support"}],"answer":["C"],"multi":false},
+{"QuestionId":"231","prompt":"Which feature allows you to automate business logic for a particular application or process such as approvals?","options":[{"key":"A","text":"Flows"},{"key":"B","text":"Action Sequences"},{"key":"C","text":"Action Sets"},{"key":"D","text":"Task Flows"},{"key":"E","text":"Flow Diagrams"}],"answer":["A"],"multi":false},
+{"QuestionId":"232","prompt":"From a form, what would you click to add additional fields to the form? (Choose two.)","options":[{"key":"A","text":"Context Menu > Form > Layout"},{"key":"B","text":"Context Menu > Configure > Form Layout"},{"key":"C","text":"Context Menu > Configure > Form Design"},{"key":"D","text":"Right click on header > Add > Field"},{"key":"E","text":"Context Menu > Form > Designer"},{"key":"F","text":"Right click on header > Configure > UX Dashboard"}],"answer":["B","C"],"multi":true},
+{"QuestionId":"233","prompt":"What is the name of the table relationship, where two or more tables are related in a bi-directional relationship, so that the related records are visible from both tables in a related list?","options":[{"key":"A","text":"Database View"},{"key":"B","text":"Many to Many"},{"key":"C","text":"One to Many"},{"key":"D","text":"Extended"}],"answer":["B"],"multi":false},
+{"QuestionId":"234","prompt":"On a Form header, what is the three bar icon called?","options":[{"key":"A","text":"Pancake icon"},{"key":"B","text":"Additional Actions or Context Menu"},{"key":"C","text":"Hamburger icon"},{"key":"D","text":"Cake icon"}],"answer":["B"],"multi":false},
+{"QuestionId":"235","prompt":"Group records are stored in which table?","options":[{"key":"A","text":"Group [sn_user_group]"},{"key":"B","text":"Group [sys_user_group]"},{"key":"C","text":"Group [s_sys_group]"},{"key":"D","text":"Group [u_sys_group]"}],"answer":["B"],"multi":false},
+{"QuestionId":"236","prompt":"What function do you use to add buttons, links, and context menu items on forms and lists?","options":[{"key":"A","text":"UI Policies"},{"key":"B","text":"UI Settings"},{"key":"C","text":"UI Actions"},{"key":"D","text":"UI Config"}],"answer":["C"],"multi":false},
+{"QuestionId":"237","prompt":"On a Business Rule, the When setting determines at what point the rule executes. What are the options for specifying that timing?","options":[{"key":"A","text":"Before, After, Async, Display"},{"key":"B","text":"Prior to, Synchronous, on Update"},{"key":"C","text":"Insert, Update, Delete, Query"},{"key":"D","text":"Before, Synchronous, Scheduled Job, View"}],"answer":["A"],"multi":false},
+{"QuestionId":"238","prompt":"What are different types of Data Sources, which may be imported into ServiceNow? (Choose four.)","options":[{"key":"A","text":"Local Sources (i.e. XML, CSV, Excel)"},{"key":"B","text":"Implementation Spoke"},{"key":"C","text":"DataHub"},{"key":"D","text":"JDBC Connection"},{"key":"E","text":"Network Server"},{"key":"F","text":"LDAP Connection"}],"answer":["A","D","E","F"],"multi":true},
+{"QuestionId":"239","prompt":"What are the components that make up a filter condition? (Choose three.)","options":[{"key":"A","text":"Operator"},{"key":"B","text":"Match Criteria"},{"key":"C","text":"Value"},{"key":"D","text":"Column"},{"key":"E","text":"Field"}],"answer":["A","C","E"],"multi":true},
+{"QuestionId":"240","prompt":"When impersonating a user for testing purposes, what is the best way to return the instance, logged in with your user account?","options":[{"key":"A","text":"Turn your computer off and on again"},{"key":"B","text":"Clear browser cache"},{"key":"C","text":"End Impersonation"},{"key":"D","text":"Log out and back in"}],"answer":["C"],"multi":false}
+
+
+
+
+ ];
+const quizEl = document.getElementById('quiz');
+
+function render(){
+  quizEl.innerHTML = '';
+  data.forEach((q, qi) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'q';
+    wrapper.dataset.idx = qi;
+    const title = document.createElement('h3');
+    title.textContent = `Pregunta ${qi+1}`;
+	const p = document.createElement('div');
+	p.innerHTML = q.prompt.replace(/\n/g, '<br>');
+	const QuestionId = document.createElement('div');
+    QuestionId.textContent = q.QuestionId;
+    console.log(q)
+    const opts = document.createElement('div');
+    opts.className = 'opts';
+    q.options.forEach(opt => {	 
+	  console.log(' ' + opt)
+      const id = `q${qi}_${opt.key}`;	  
+      const input = document.createElement('input');
+      input.type = q.multi ? 'checkbox' : 'radio';
+      input.name = `q${qi}`;
+      input.value = opt.key;
+      input.id = id;
+      const label = document.createElement('label');
+      label.setAttribute('for', id);
+      label.innerHTML = `<b>${opt.key}.</b> ${opt.text}`;
+      label.prepend(input);
+      opts.appendChild(label);
+    });
+
+    const actions = document.createElement('div');
+    actions.className = 'row-actions';
+    const btn = document.createElement('button');
+    btn.textContent = 'Validar';
+    btn.addEventListener('click', () => checkOne(qi));
+    actions.appendChild(btn);
+
+    const res = document.createElement('div');
+    res.className = 'result';
+    res.id = `res_${qi}`;
+
+
+    wrapper.appendChild(QuestionId);
+    wrapper.appendChild(title);
+    wrapper.appendChild(p);
+    wrapper.appendChild(opts);
+    wrapper.appendChild(actions);
+    wrapper.appendChild(res);
+    quizEl.appendChild(wrapper);
+  })
+}
+
+function checkOne(i){
+  const q = data[i];
+  const sel = Array.from(document.querySelectorAll(`input[name=q${i}]:checked`)).map(n=>n.value).sort();
+  const ans = [...q.answer].sort();
+  const ok = sel.length === ans.length && sel.every((v,j)=>v===ans[j]);
+  const box = document.querySelectorAll('.q')[i];
+  box.classList.remove('correct','incorrect');
+  box.classList.add(ok ? 'correct' : 'incorrect');
+  const res = document.getElementById(`res_${i}`);
+  if(ok){
+    res.textContent = '✔️ ¡Correcto!';
+  } else {
+    res.innerHTML = `❌ Incorrecto. Respuesta correcta: <b>${ans.join(', ')}</b>`;
+  }
+}
+
+function checkAll(){
+  let correct = 0;
+  data.forEach((_, i) => {
+    const before = document.querySelectorAll('.q')[i].classList.contains('correct');
+    checkOne(i);
+    if(document.querySelectorAll('.q')[i].classList.contains('correct')) correct++;
+  });
+  document.getElementById('score').textContent = `Puntaje: ${correct} / ${data.length}`;
+}
+
+function resetAll(){
+  document.querySelectorAll('input[type=checkbox], input[type=radio]').forEach(i=> i.checked = false);
+  document.getElementById('score').textContent='';
+  document.querySelectorAll('.q').forEach(q => q.classList.remove('correct','incorrect'));
+  document.querySelectorAll('.result').forEach(r => r.textContent='');
+}
+
+function shuffle(){
+  // Barajar preguntas y opciones
+  for(let i=data.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [data[i], data[j]] = [data[j], data[i]];
+  }
+  data.forEach(q => {
+    for(let i=q.options.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [q.options[i], q.options[j]] = [q.options[j], q.options[i]];
+    }
+  });
+  render();
+}
+
+render();
+document.getElementById('checkAll').addEventListener('click', checkAll);
+document.getElementById('resetAll').addEventListener('click', resetAll);
+document.getElementById('shuffleBtn').addEventListener('click', shuffle);
+</script>
+</body>
+</html>

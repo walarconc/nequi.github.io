@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Simulador ServiceNow CSA – Por pregunta</title>
+<style>
+ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:20px;line-height:1.45}
+ h1{font-size:1.8rem;margin:0 0 .25rem}
+ .meta{color:#555;margin-bottom:1rem}
+ .q{border:1px solid #e0e0e0;border-radius:10px;padding:12px 14px;margin:12px 0}
+ .q.correct{border-color:#2e7d32;background:#e8f5e9}
+ .q.incorrect{border-color:#c62828;background:#ffebee}
+ .q h3{margin:.1rem 0 .4rem;font-size:1.05rem}
+ .opts{margin:6px 0 8px 8px}
+ label{display:block;margin:.3rem 0;cursor:pointer}
+ .result{font-weight:600;margin-top:6px}
+ .controls{position:sticky;top:0;background:#fff;padding:.6rem 0;border-bottom:1px solid #eee;z-index:10}
+ button{background:#2563eb;border:none;color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;margin-right:8px}
+ button.secondary{background:#64748b}
+ .score{font-weight:700;margin-left:6px}
+ .row-actions{display:flex;gap:8px;align-items:center}
+</style>
+</head>
+<body>
+  <h1>Simulador de examen: ServiceNow CSA</h1>
+  <div class="meta">Cada pregunta tiene su botón <b>Validar</b>. También puedes usar el botón global para calificar todas.</div>
+  <div class="controls">
+    <button id="checkAll">Revisar todas</button>
+    <button id="resetAll" class="secondary">Limpiar selecciones</button>
+    <button id="shuffleBtn" class="secondary">Barajar preguntas</button>
+    <span class="score" id="score"></span>
+  </div>
+  <div id="quiz"></div>
+<script>
+let data = [
+
+{"QuestionId":"303","prompt":"What section on a task record would you use to see the most recent update made to a record?","options":[{"key":"A","text":"Audit Log"},{"key":"B","text":"Timeline"},{"key":"C","text":"Activity"},{"key":"D","text":"Journal"}],"answer":["C"],"multi":false},
+{"QuestionId":"304","prompt":"The Employee On-boarding team has asked for a way for managers to order computers, monitors, business cards, and cell phones for new employees. How would you proceed to meet this requirement?","options":[{"key":"A","text":"Create Requested Item"},{"key":"B","text":"Create Record Producer"},{"key":"C","text":"Create On-boarding Bot"},{"key":"D","text":"Create Order Guide"}],"answer":["D"],"multi":false},
+{"QuestionId":"305","prompt":"If you have the Impersonate role what type of user are you not able to impersonate?","options":[{"key":"A","text":"Catalog User"},{"key":"B","text":"Customer"},{"key":"C","text":"System Administrator"},{"key":"D","text":"VIP"},{"key":"E","text":"Approver"}],"answer":["C"],"multi":false},
+{"QuestionId":"306","prompt":"From a related list, what would a user click to personalize the layout of the columns?","options":[{"key":"A","text":"Gear"},{"key":"B","text":"Context Menu"},{"key":"C","text":"Pencil"},{"key":"D","text":"Magnifier"}],"answer":["A"],"multi":false},
+{"QuestionId":"307","prompt":"What is the language used for scripting in ServiceNow?","options":[{"key":"A","text":"C++"},{"key":"B","text":"JavaScript"},{"key":"C","text":"PHP"},{"key":"D","text":"Python"}],"answer":["B"],"multi":false},
+{"QuestionId":"308","prompt":"What are examples of UI Actions, relating to Lists? (Choose four.)","options":[{"key":"A","text":"List Links"},{"key":"B","text":"List Choices"},{"key":"C","text":"List Buttons"},{"key":"D","text":"List Override"},{"key":"E","text":"List Context Menu"},{"key":"F","text":"List Control"}],"answer":["A","B","C","E"],"multi":true},
+{"QuestionId":"309","prompt":"A Service Catalog project will involve building 80 catalog items. For each of the catalog items, the following fields will be mandatory on the forms: \n\n\ 1-Requested for, \n 2-Requested by, \n 3-Approving manager, \n 4-Delivery instructions. \n\n\All of the other variables will be specific to the individual catalog item. What features would you use when designing the catalog item form?","options":[{"key":"A","text":"Create a Variable Set Template, then apply to all of the catalog items."},{"key":"B","text":"Create one Variable Set for the four variables, then add that variable set to each of the 80 catalog items."},{"key":"C","text":"Create a Record Producer that contains the four fields; then add to the record producer related list on the Catalog Items."},{"key":"D","text":"Create a Flow Designer Action, with Variable Set Data Pill, then apply flow to all of the 80 catalog items."},{"key":"E","text":"Create an Order Guide, which includes all variables; then copy and hide variables as needed."}],"answer":["B"],"multi":false},
+{"QuestionId":"310","prompt":"A task worker asks how they can monitor any updates occurring to records assigned to him, like responses from customers. What do you suggest?","options":[{"key":"A","text":"On My Work list, select the Activity Stream icon to show a frame with live updates"},{"key":"B","text":"Click on the eyeglass icon to expand the Monitor frame"},{"key":"C","text":"Open an Agent workspace tab for each record he wants to monitor"},{"key":"D","text":"Select Service Desk > My Work Dashboard"}],"answer":["A"],"multi":false},
+{"QuestionId":"311","prompt":"When importing data from a spreadsheet, which step defines where the incoming data columns will be written in the receiving table?","options":[{"key":"A","text":"Schedule Transform"},{"key":"B","text":"Field Matching"},{"key":"C","text":"Select Data Source"},{"key":"D","text":"Create Transform Map"},{"key":"E","text":"Load Data"}],"answer":["D"],"multi":false},
+{"QuestionId":"312","prompt":"What access does a user need to be able to import articles to a knowledge base?","options":[{"key":"A","text":"sn_knowledge_import"},{"key":"B","text":"sn_knowledge_contribute"},{"key":"C","text":"Can contribute"},{"key":"D","text":"Can import"}],"answer":["C"],"multi":false},
+{"QuestionId":"313","prompt":"To apply a UI Policy to all views, which field should be set to true in its definition record?","options":[{"key":"A","text":"Global"},{"key":"B","text":"Reverse if false"},{"key":"C","text":"On load"},{"key":"D","text":"Inherit"}],"answer":["A"],"multi":false},
+{"QuestionId":"314","prompt":"What are the steps for importing data using an import set?","options":[{"key":"A","text":"Select source file; Run automap; Transform data; Clean up target table"},{"key":"B","text":"Identify source; Import transform map; Run transformer; Verify import"},{"key":"C","text":"Setup LDAP; Test map; Create update set; Run import; Apply update set"},{"key":"D","text":"Load the data; Create transform map; Transform data; Clean up import table"}],"answer":["D"],"multi":false},
+{"QuestionId":"315","prompt":"Which type of scripts run in the browser?","options":[{"key":"A","text":"Script Includes Scripts"},{"key":"B","text":"Access Control Scripts"},{"key":"C","text":"Business Rule Scripts"},{"key":"D","text":"UI Policies and Client Scripts"}],"answer":["D"],"multi":false},
+{"QuestionId":"316","prompt":"Which modules can you use to create a new table? (Choose two.)","options":[{"key":"A","text":"Dictionary"},{"key":"B","text":"Schema Map"},{"key":"C","text":"Tables"},{"key":"D","text":"Tables & Columns"}],"answer":["C","D"],"multi":true},
+{"QuestionId":"317","prompt":"Which one of the following describes the primary operations performed against tables in the ServiceNow platform?","options":[{"key":"A","text":"Create, Read, Upload, Delete"},{"key":"B","text":"Capture, Rate, Write, Develop"},{"key":"C","text":"Create, Rate, Update, Delete"},{"key":"D","text":"Create, Read, Write, Delete"}],"answer":["D"],"multi":false},
+{"QuestionId":"318","prompt":"How is a user defined in ServiceNow?","options":[{"key":"A","text":"A user is a record stored in the Profile [sys_user_profile] table"},{"key":"B","text":"A user is a record stored in the User [sys_user] table"},{"key":"C","text":"A user is a record stored in the User Preference [sys_user_preference] table"},{"key":"D","text":"A user is a field in the LDAP integration"}],"answer":["B"],"multi":false},
+{"QuestionId":"319","prompt":"Which ServiceNow utility gives a Service Desk agent the ability to trace from a Service having an issue, to see which CIs supporting that service have active issues?","options":[{"key":"A","text":"CI Dependency View"},{"key":"B","text":"Event Management Homepage"},{"key":"C","text":"Service Dashboard"},{"key":"D","text":"CI Health Dashboard"}],"answer":["A"],"multi":false},
+{"QuestionId":"320","prompt":"Which feature enables business process owners to organize Flow Designer content into unified and digitized cross-enterprise processes via a digitized task board interface?","options":[{"key":"A","text":"Flow Designer"},{"key":"B","text":"Workflow Editor"},{"key":"C","text":"Process Workflow Designer"},{"key":"D","text":"Process Automation Designer"}],"answer":["D"],"multi":false},
+{"QuestionId":"321","prompt":"An IT user calls the service desk because he needs to work on task records. All he can see is Self Service on their homepage when he logs in to the ServiceNow instance. What issue could explain this? (Choose two.)","options":[{"key":"A","text":"His user account does not have ITIL role"},{"key":"B","text":"His user account was not approved by their manager"},{"key":"C","text":"His user account is not logged in properly"},{"key":"D","text":"His user account failed LDAP authentication"},{"key":"E","text":"His user account does not belong to any groups, which contain the ITIL role"}],"answer":["A","E"],"multi":true},
+{"QuestionId":"322","prompt":"On a related list, which buttons are commonly used for managing the records on the list? (Choose three.)","options":[{"key":"A","text":"Add"},{"key":"B","text":"Edit"},{"key":"C","text":"Publish"},{"key":"D","text":"Manage"},{"key":"E","text":"New"}],"answer":["A","B","E"],"multi":true},
+{"QuestionId":"323","prompt":"A customer requests the following data quality measures be added: \n\n 1-Incident numbers should be read only, on all lists and forms, for all users. \n 2-Short Description field should be mandatory, on all records, across all applications, on Insert. \n\n\Which type of policy would you use to meet this requirement?","options":[{"key":"A","text":"Data Quality Policy"},{"key":"B","text":"Dictionary Design Policy"},{"key":"C","text":"Data Policy"},{"key":"D","text":"Field Criteria Policy"}],"answer":["C"],"multi":false},
+{"QuestionId":"324","prompt":"On what part of the ServiceNow instance, would you find the option to access applications, like Incident Management?","options":[{"key":"A","text":"Application Navigator"},{"key":"B","text":"Service Desk Homepage"},{"key":"C","text":"Self Service Module"},{"key":"D","text":"Favorites"}],"answer":["A"],"multi":false},
+{"QuestionId":"325","prompt":"What catalog tool would you use to create a catalog item or record producer?","options":[{"key":"A","text":"Catalog Builder"},{"key":"B","text":"Workflow Designer"},{"key":"C","text":"Catalog Designer"},{"key":"D","text":"Catalog Formatter"}],"answer":["A"],"multi":false},
+{"QuestionId":"326","prompt":"On a form, which type of field has this icon which can be clicked, to see a preview of the associated record?","options":[{"key":"A","text":"Lookup"},{"key":"B","text":"Preview"},{"key":"C","text":"Reference"},{"key":"D","text":"Snapshot"},{"key":"E","text":"Quickview"},{"key":"F","text":"Drilldown"}],"answer":["C"],"multi":false},
+{"QuestionId":"327","prompt":"While on an Incident record, how would you add a Tag for \"Special Handling\" to the record?","options":[{"key":"A","text":"Click on the Context menu, select Add Tag, type Special Handling, press enter"},{"key":"B","text":"Click on the More options (...) icon, click Add Tag, type Special Handling, press enter"},{"key":"C","text":"On the Tag field, select Special Handling from the choice list"},{"key":"D","text":"On the Special Handling field, check the box"}],"answer":["B"],"multi":false},
+{"QuestionId":"328","prompt":"What feature allows you to limit who is able to contribute or read knowledge within a knowledge base?","options":[{"key":"A","text":"Roles"},{"key":"B","text":"Groups"},{"key":"C","text":"User Criteria"},{"key":"D","text":"Categories"}],"answer":["C"],"multi":false},
+{"QuestionId":"329","prompt":"When moving a homepage or dashboard between instances, what must you remember?","options":[{"key":"A","text":"Manually add them to the update set"},{"key":"B","text":"They cannot be moved via update set"},{"key":"C","text":"They are automatically added to the update set"},{"key":"D","text":"Create a separate update set for them"}],"answer":["A"],"multi":false},
+{"QuestionId":"330","prompt":"What is the platform name for the Group table?","options":[{"key":"A","text":"sys_groups"},{"key":"B","text":"group"},{"key":"C","text":"sys_user_group"},{"key":"D","text":"sys_group"}],"answer":["C"],"multi":false},
+{"QuestionId":"330","prompt":"Many actions are included with flow designer, what are some frequently used core actions? (Choose four.)","options":[{"key":"A","text":"Look for Update"},{"key":"B","text":"Create Record"},{"key":"C","text":"Ask for Approval"},{"key":"D","text":"Look Up Record"},{"key":"E","text":"Wait for Condition"},{"key":"F","text":"Wait for Match"}],"answer":["B","C","D","E"],"multi":true},
+{"QuestionId":"331","prompt":"What role enables someone to authorize a request, with no other permissions on the platform?","options":[{"key":"A","text":"Approval Group [approval_group]"},{"key":"B","text":"Authorize [authorize_user]"},{"key":"C","text":"Reviewer [reviewer_user]"},{"key":"D","text":"Verification [verify_user]"},{"key":"E","text":"Approver [approver_user]"}],"answer":["E"],"multi":false},
+{"QuestionId":"332","prompt":"On the knowledge base record, which tab would you use to define which users are not able to write articles to the knowledge base?","options":[{"key":"A","text":"Can Contribute"},{"key":"B","text":"Cannot Contribute"},{"key":"C","text":"Can Read"},{"key":"D","text":"Can Write"},{"key":"E","text":"Can Author"}],"answer":["B"],"multi":false},
+{"QuestionId":"333","prompt":"What types of entities can receive task assignments, in ServiceNow? (Choose two.)","options":[{"key":"A","text":"Users"},{"key":"B","text":"Departments"},{"key":"C","text":"Groups"},{"key":"D","text":"Teams"}],"answer":["A","C"],"multi":true},
+{"QuestionId":"334","prompt":"The Report Designer contains different sections for configuring your report. Which section is used to adjust the look of your report, including colors, titles and legend layout?","options":[{"key":"A","text":"Layout"},{"key":"B","text":"Format"},{"key":"C","text":"Configure"},{"key":"D","text":"Style"}],"answer":["D"],"multi":false},
+{"QuestionId":"335","prompt":"How would you distinguish between a Base Class table and a Parent Class table?","options":[{"key":"A","text":"Extended tables are always extended from Parent tables. Extended tables are usually extended from Base tables."},{"key":"B","text":"Extended tables can be extended from Parent tables or Base tables; but they cannot be extended from both."},{"key":"C","text":"Base Class tables always have tables extended from them. Parent tables do not have tables extended from them."},{"key":"D","text":"Base Class table is not extended from another table, Parent class tables may be extended from another table."}],"answer":["D"],"multi":false},
+{"QuestionId":"336","prompt":"When a custom table is created, which access control rules are automatically created? (Choose four.)","options":[{"key":"A","text":"create"},{"key":"B","text":"delete"},{"key":"C","text":"execute"},{"key":"D","text":"update"},{"key":"E","text":"read"},{"key":"F","text":"write"}],"answer":["A","B","E","F"],"multi":true},
+{"QuestionId":"337","prompt":"Which banner icon do you use to change your personal system settings, like your instance color scheme?","options":[{"key":"A","text":"Magnifier"},{"key":"B","text":"Question mark"},{"key":"C","text":"Gear"},{"key":"D","text":"Chat bubbles"}],"answer":["C"],"multi":false},
+{"QuestionId":"338","prompt":"On a form header, which icon would you click to access Template features?","options":[{"key":"A","text":"Stamp"},{"key":"B","text":"Context Menu"},{"key":"C","text":"More Options (...)"},{"key":"D","text":"Paper clip"}],"answer":["C"],"multi":false},
+{"QuestionId":"339","prompt":"When building an extended table from a base table, which fields do you need to create? (Choose two.)","options":[{"key":"A","text":"The fields that are not in the base table."},{"key":"B","text":"The mandatory fields for the base table."},{"key":"C","text":"The fields that are specific to the extended table."},{"key":"D","text":"The reference fields for the base table."}],"answer":["A","C"],"multi":true},
+{"QuestionId":"340","prompt":"While showing a customer their Incident form, they ask to change the Priority field title to display their internal terminology PValue. How would you do that? (Choose two.)","options":[{"key":"A","text":"Right click on Priority and select Configure Label"},{"key":"B","text":"Right click on Priority and select Configure Dictionary"},{"key":"C","text":"Right click on Priority and select Configure Display Settings"},{"key":"D","text":"Right click on Priority and select Configure Column"}],"answer":["A","B"],"multi":true},
+{"QuestionId":"341","prompt":"As administrator, what must you do to access features of High Security Settings?","options":[{"key":"A","text":"Impersonate Security Admin"},{"key":"B","text":"Select Elevate Roles"},{"key":"C","text":"Add security_admin role to your user account"},{"key":"D","text":"Use System Administration > Elevate Roles module"}],"answer":["B"],"multi":false},
+{"QuestionId":"342","prompt":"What section on the notes tab, shows the history of the work documented on the record?","options":[{"key":"A","text":"Audit Log"},{"key":"B","text":"Timeline"},{"key":"C","text":"Journal"},{"key":"D","text":"Diary"},{"key":"E","text":"Activity Stream"}],"answer":["E"],"multi":false},
+{"QuestionId":"343","prompt":"How would you navigate to the Schema map for a table?","options":[{"key":"A","text":"System Definition > Tables; Select Table; Go to Related links and click Show Schema Map"},{"key":"B","text":"System Dictionary > Show Schema Map; Select Table"},{"key":"C","text":"System Definition > Show Schema Map; Select Table"},{"key":"D","text":"System Definition > Dictionary; Select Table; Go to Related links and click Show Schema Map"}],"answer":["A"],"multi":false},
+{"QuestionId":"344","prompt":"Which is the base table of the configuration management database hierarchy?","options":[{"key":"A","text":"cmdb_ci"},{"key":"B","text":"cmdb"},{"key":"C","text":"cmdb_rel_ci"},{"key":"D","text":"ucmdb"}],"answer":["B"],"multi":false},
+{"QuestionId":"345","prompt":"Which best describes a field in a ServiceNow table?","options":[{"key":"A","text":"A field is a table row."},{"key":"B","text":"A field is an item that appears in a menu list."},{"key":"C","text":"A field is a table cell that stores data."},{"key":"D","text":"A field is a record in a table."}],"answer":["C"],"multi":false},
+{"QuestionId":"346","prompt":"What are examples of UI Actions relating to forms? (Choose three.)","options":[{"key":"A","text":"Form Columns"},{"key":"B","text":"Form View"},{"key":"C","text":"Form Buttons"},{"key":"D","text":"Form Context Menu"},{"key":"E","text":"Form Links"}],"answer":["C","D","E"],"multi":true},
+{"QuestionId":"347","prompt":"Here is an example of the criteria set for a knowledge base: \n\nCompanies: ACME North America;\n Departments: HR; \nGroups: ACME Managers; \nMatch All: Yes.\n\n In this example, what users would have access to this knowledge base?","options":[{"key":"A","text":"Members of the ACME Manager group, who are also members of HR Department and part of ACME North America"},{"key":"B","text":"Employees of ACME North America, who are members of HR Department or the ACME Managers group"},{"key":"C","text":"Users which are members of either ACME North America, or HR Department, or ACME Managers group"},{"key":"D","text":"Members of the ACME Managers group, and HR department, regardless of geography"}],"answer":["A"],"multi":false},
+{"QuestionId":"348","prompt":"In Flow Designer, where is the data from an action stored so it can be used in subsequent actions in the flow?","options":[{"key":"A","text":"Data Pill"},{"key":"B","text":"Data Element"},{"key":"C","text":"Data Trigger"},{"key":"D","text":"Field Value"},{"key":"E","text":"Field Icon"}],"answer":["A"],"multi":false},
+{"QuestionId":"349","prompt":"A customer has asked for the following updates to a form: \n\nMake Resolution code Mandatory, when state is changed to Resolved; \nHide Major Incident check box, unless logged in user has Major Incident Manager role.\n\n What type of rule(s) would you use to implement this requirement?","options":[{"key":"A","text":"Form Constraint"},{"key":"B","text":"UI Design"},{"key":"C","text":"Field Limiter"},{"key":"D","text":"UI Policy"},{"key":"E","text":"Dictionary Design"}],"answer":["D"],"multi":false},
+{"QuestionId":"350","prompt":"What setting allows users to view a Knowledge Base article even if they are not logged in?","options":[{"key":"A","text":"The Public setting"},{"key":"B","text":"The View All setting"},{"key":"C","text":"The ESS role"},{"key":"D","text":"The Allow All role"}],"answer":["A"],"multi":false},
+{"QuestionId":"351","prompt":"When adding a related list to a form, you choose the related list from the list collector. What is an example of a related list you might see on the list collector? (Choose three.)","options":[{"key":"A","text":"Problem==Parent"},{"key":"B","text":"HR Case->Parent"},{"key":"C","text":"Catalog Task->Parent"},{"key":"D","text":"Outage->Task number"},{"key":"E","text":"Release Phase==Parent"}],"answer":["B","C","D"],"multi":true},
+{"QuestionId":"352","prompt":"How is the ServiceNow platform set up so that Administrators can easily configure their instances to send an email at the end of an upgrade?","options":[{"key":"A","text":"Administrators can update the email notification named \"System Upgraded\" in the System Logs module by adding the appropriate User to receive it."},{"key":"B","text":"Administrators can update the email notification named \"System Upgraded\" in the Notifications module by adding the appropriate User to receive it."},{"key":"C","text":"Administrators can write a Client Script to send out an email to the Administrator when an Update is"},{"key":"D","text":"Administrators can write a Business Rule to send out an email to the Administrator when an Update is complete."}],"answer":["B"],"multi":false},
+{"QuestionId":"353","prompt":"A customer wants to be able to identify and track components of their infrastructure that support their eCommerce service. What ServiceNow products could support this requirement? (Choose three.)","options":[{"key":"A","text":"Financial Management"},{"key":"B","text":"Discovery"},{"key":"C","text":"Configuration Management (CMDB)"},{"key":"D","text":"Service Mapping"},{"key":"E","text":"Performance Analytics"}],"answer":["B","C","D"],"multi":true},
+{"QuestionId":"354","prompt":"What capability allows users to create dashboards with widgets to visualize data over time in order to identify areas of improvement?","options":[{"key":"A","text":"Scheduled Reports"},{"key":"B","text":"Performance Analytics"},{"key":"C","text":"Analytics Reports"},{"key":"D","text":"Reporting"}],"answer":["B"],"multi":false},
+{"QuestionId":"355","prompt":"Which type of ServiceNow script runs on the web browser?","options":[{"key":"A","text":"Server script"},{"key":"B","text":"Database script"},{"key":"C","text":"Client script"},{"key":"D","text":"Local script"}],"answer":["C"],"multi":false},
+{"QuestionId":"356","prompt":"When selecting the Target table for an import, which tables can you select? (Choose three.)","options":[{"key":"A","text":"Tables outside of ServiceNow"},{"key":"B","text":"Tables within the global scope"},{"key":"C","text":"Related tables, using Dot Walk"},{"key":"D","text":"Tables which allow write access to other applications"},{"key":"E","text":"Tables within the existing application scope"}],"answer":["B","D","E"],"multi":true},
+{"QuestionId":"357","prompt":"On Access Control Definitions, what are ways you can set the permissions on a Table? (Choose three.)","options":[{"key":"A","text":"Conditional Expressions"},{"key":"B","text":"Roles"},{"key":"C","text":"CRUD"},{"key":"D","text":"Script that sets the answer variable to true or false"},{"key":"E","text":"Groups"}],"answer":["A","B","D"],"multi":true},
+{"QuestionId":"358","prompt":"What tool is used to import data from various data sources, and map that data into ServiceNow tables?","options":[{"key":"A","text":"Transform Set"},{"key":"B","text":"Data Pack"},{"key":"C","text":"Update Set"},{"key":"D","text":"Import Set"}],"answer":["D"],"multi":false},
+{"QuestionId":"359","prompt":"When you set a policy that is applied to all data entered into the platform (UI, Import Sets, or Web Services), where does this policy run by default?","options":[{"key":"A","text":"Client"},{"key":"B","text":"Network"},{"key":"C","text":"Browser"},{"key":"D","text":"Server"}],"answer":["D"],"multi":false},
+{"QuestionId":"360","prompt":"On what part of the ServiceNow instance, would you find the option to Impersonate User?","options":[{"key":"A","text":"User Menu"},{"key":"B","text":"Content Frame"},{"key":"C","text":"Application Navigator"},{"key":"D","text":"Module"}],"answer":["A"],"multi":false},
+{"QuestionId":"361","prompt":"How would you describe the relationship between the Incident and Task table?","options":[{"key":"A","text":"Incident table has a one to many relationship with the Task table"},{"key":"B","text":"Incident table is extended from Task table"},{"key":"C","text":"Incident table is related to the Task table via the INC number"},{"key":"D","text":"Incident table has a many to many relationship with the Task table"},{"key":"E","text":"Incident table is a database view of the Task table"}],"answer":["B"],"multi":false},
+{"QuestionId":"362","prompt":"Which flow components allow you to specify when a flow should be run?","options":[{"key":"A","text":"Trigger and Condition Pill"},{"key":"B","text":"Condition and Table"},{"key":"C","text":"Trigger Criteria and Clock"},{"key":"D","text":"Trigger and Condition"},{"key":"E","text":"Scope and Trigger Condition"}],"answer":["D"],"multi":false},
+{"QuestionId":"363","prompt":"Which feature helps to automatically allocate a critical, high-priority, service request to the appropriate assignment group or team member?","options":[{"key":"A","text":"Assignment Rule"},{"key":"B","text":"User Policy"},{"key":"C","text":"Predictive Intelligence"},{"key":"D","text":"UI Policy"}],"answer":["A"],"multi":false}
+
+
+
+
+
+ ];
+const quizEl = document.getElementById('quiz');
+
+function render(){
+  quizEl.innerHTML = '';
+  data.forEach((q, qi) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'q';
+    wrapper.dataset.idx = qi;
+    const title = document.createElement('h3');
+    title.textContent = `Pregunta ${qi+1}`;
+	const p = document.createElement('div');
+	p.innerHTML = q.prompt.replace(/\n/g, '<br>');
+	const QuestionId = document.createElement('div');
+    QuestionId.textContent = q.QuestionId;
+    console.log(q)
+    const opts = document.createElement('div');
+    opts.className = 'opts';
+    q.options.forEach(opt => {	 
+	  console.log(' ' + opt)
+      const id = `q${qi}_${opt.key}`;	  
+      const input = document.createElement('input');
+      input.type = q.multi ? 'checkbox' : 'radio';
+      input.name = `q${qi}`;
+      input.value = opt.key;
+      input.id = id;
+      const label = document.createElement('label');
+      label.setAttribute('for', id);
+      label.innerHTML = `<b>${opt.key}.</b> ${opt.text}`;
+      label.prepend(input);
+      opts.appendChild(label);
+    });
+
+    const actions = document.createElement('div');
+    actions.className = 'row-actions';
+    const btn = document.createElement('button');
+    btn.textContent = 'Validar';
+    btn.addEventListener('click', () => checkOne(qi));
+    actions.appendChild(btn);
+
+    const res = document.createElement('div');
+    res.className = 'result';
+    res.id = `res_${qi}`;
+
+
+    wrapper.appendChild(QuestionId);
+    wrapper.appendChild(title);
+    wrapper.appendChild(p);
+    wrapper.appendChild(opts);
+    wrapper.appendChild(actions);
+    wrapper.appendChild(res);
+    quizEl.appendChild(wrapper);
+  })
+}
+
+function checkOne(i){
+  const q = data[i];
+  const sel = Array.from(document.querySelectorAll(`input[name=q${i}]:checked`)).map(n=>n.value).sort();
+  const ans = [...q.answer].sort();
+  const ok = sel.length === ans.length && sel.every((v,j)=>v===ans[j]);
+  const box = document.querySelectorAll('.q')[i];
+  box.classList.remove('correct','incorrect');
+  box.classList.add(ok ? 'correct' : 'incorrect');
+  const res = document.getElementById(`res_${i}`);
+  if(ok){
+    res.textContent = '✔️ ¡Correcto!';
+  } else {
+    res.innerHTML = `❌ Incorrecto. Respuesta correcta: <b>${ans.join(', ')}</b>`;
+  }
+}
+
+function checkAll(){
+  let correct = 0;
+  data.forEach((_, i) => {
+    const before = document.querySelectorAll('.q')[i].classList.contains('correct');
+    checkOne(i);
+    if(document.querySelectorAll('.q')[i].classList.contains('correct')) correct++;
+  });
+  document.getElementById('score').textContent = `Puntaje: ${correct} / ${data.length}`;
+}
+
+function resetAll(){
+  document.querySelectorAll('input[type=checkbox], input[type=radio]').forEach(i=> i.checked = false);
+  document.getElementById('score').textContent='';
+  document.querySelectorAll('.q').forEach(q => q.classList.remove('correct','incorrect'));
+  document.querySelectorAll('.result').forEach(r => r.textContent='');
+}
+
+function shuffle(){
+  // Barajar preguntas y opciones
+  for(let i=data.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [data[i], data[j]] = [data[j], data[i]];
+  }
+  data.forEach(q => {
+    for(let i=q.options.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [q.options[i], q.options[j]] = [q.options[j], q.options[i]];
+    }
+  });
+  render();
+}
+
+render();
+document.getElementById('checkAll').addEventListener('click', checkAll);
+document.getElementById('resetAll').addEventListener('click', resetAll);
+document.getElementById('shuffleBtn').addEventListener('click', shuffle);
+</script>
+</body>
+</html>

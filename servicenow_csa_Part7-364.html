@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Simulador ServiceNow CSA – Por pregunta</title>
+<style>
+ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:20px;line-height:1.45}
+ h1{font-size:1.8rem;margin:0 0 .25rem}
+ .meta{color:#555;margin-bottom:1rem}
+ .q{border:1px solid #e0e0e0;border-radius:10px;padding:12px 14px;margin:12px 0}
+ .q.correct{border-color:#2e7d32;background:#e8f5e9}
+ .q.incorrect{border-color:#c62828;background:#ffebee}
+ .q h3{margin:.1rem 0 .4rem;font-size:1.05rem}
+ .opts{margin:6px 0 8px 8px}
+ label{display:block;margin:.3rem 0;cursor:pointer}
+ .result{font-weight:600;margin-top:6px}
+ .controls{position:sticky;top:0;background:#fff;padding:.6rem 0;border-bottom:1px solid #eee;z-index:10}
+ button{background:#2563eb;border:none;color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;margin-right:8px}
+ button.secondary{background:#64748b}
+ .score{font-weight:700;margin-left:6px}
+ .row-actions{display:flex;gap:8px;align-items:center}
+</style>
+</head>
+<body>
+  <h1>Simulador de examen: ServiceNow CSA</h1>
+  <div class="meta">Cada pregunta tiene su botón <b>Validar</b>. También puedes usar el botón global para calificar todas.</div>
+  <div class="controls">
+    <button id="checkAll">Revisar todas</button>
+    <button id="resetAll" class="secondary">Limpiar selecciones</button>
+    <button id="shuffleBtn" class="secondary">Barajar preguntas</button>
+    <span class="score" id="score"></span>
+  </div>
+  <div id="quiz"></div>
+<script>
+let data = [
+
+{"QuestionId":"364","prompt":"The Report Designer contains different sections for configuring your report. Which section is used to specify the name of the report, and the table or data source for the report?","options":[{"key":"A","text":"Type"},{"key":"B","text":"Properties"},{"key":"C","text":"Configure"},{"key":"D","text":"Sources"},{"key":"E","text":"Data"}],"answer":["E"],"multi":false},
+{"QuestionId":"365","prompt":"You are editing a new incident record and would like the \"Save\" button to be located on the Form header. Which action would need to be taken for that button to appear?","options":[{"key":"A","text":"Context Menu > Form Design > add the \"Save\" button."},{"key":"B","text":"All > System Properties > UI Properties > Turn on the \"glide.ui.advanced\" property."},{"key":"C","text":"All > System Properties > UI Properties > Turn on the \"Save\" button."},{"key":"D","text":"Context Menu > Form Layout > add the \"Save\" button."}],"answer":["C"],"multi":false},
+{"QuestionId":"366","prompt":"Which feature ensures data consistency while importing data using import sets and web services?","options":[{"key":"A","text":"UI Policy"},{"key":"B","text":"Data Policy"},{"key":"C","text":"Business Rule"},{"key":"D","text":"Client Script"},{"key":"E","text":"CSDM"}],"answer":["B"],"multi":false},
+{"QuestionId":"367","prompt":"When using Flow Designer, what is the Flow Execution initiated by?","options":[{"key":"A","text":"A flow logic"},{"key":"B","text":"An existing subflow"},{"key":"C","text":"An execution data pill"},{"key":"D","text":"A trigger"}],"answer":["D"],"multi":false},
+{"QuestionId":"368","prompt":"What is the name of the string that displays filter criteria?","options":[{"key":"A","text":"Breadcrumb"},{"key":"B","text":"Choice"},{"key":"C","text":"Menu"},{"key":"D","text":"Topic"}],"answer":["A"],"multi":false},
+{"QuestionId":"369","prompt":"Which system property is added and set to true in order to see impersonation events in the System Log?","options":[{"key":"A","text":"glide.sys.all_impersonation"},{"key":"B","text":"glide.user_setting"},{"key":"C","text":"glide.impersonation_setting"},{"key":"D","text":"glide.sys.log_impersonation"},{"key":"E","text":"glide.sys.admin_login"}],"answer":["D"],"multi":false},
+{"QuestionId":"370","prompt":"What process allows users to create, categorize, review, approve and browse important information in a centralized location that is shared by the entire organization?","options":[{"key":"A","text":"Self Service Management"},{"key":"B","text":"Knowledge Management"},{"key":"C","text":"Business Information Management"},{"key":"D","text":"Information Portal Management"},{"key":"E","text":"Knowledge-Centered Management"}],"answer":["B"],"multi":false},
+{"QuestionId":"371","prompt":"A colleague wants to rearrange the columns on their My Work List. Once the user has navigated to the list, where should they navigate to select and arrange the columns?","options":[{"key":"A","text":"Right click on any column header, Context Menu > Configure > List Layout"},{"key":"B","text":"Click List Context Menu > Configure > List Layout"},{"key":"C","text":"Click List Context Menu > Personalize List"},{"key":"D","text":"Click Personalize List"}],"answer":["D"],"multi":false},
+{"QuestionId":"372","prompt":"You are looking at a list of Active Incidents. You want to exclude Incidents with the state of Resolved. How might you do that?","options":[{"key":"A","text":"On Search, select State, type not Resolved, press enter"},{"key":"B","text":"On State column title, right-click, select Filter Out > Resolved"},{"key":"C","text":"On the list of records, locate and right-click on the Resolved value, select Filter Out"},{"key":"D","text":"On the list of records, locate and right-click on the Resolved value, select Exclude"},{"key":"E","text":"Click Funnel icon, click AND, Select Resolved, is Not, State, click Run"}],"answer":["C"],"multi":false},
+{"QuestionId":"373","prompt":"Roles can inherit permissions from other roles. Which role inherits all of the permissions of the catalog role, and the user_criteria_admin role, plus has permissions to create Items and Services?","options":[{"key":"A","text":"Sys Admin [sys_admin]"},{"key":"B","text":"Catalog Admin [catalog_admin]"},{"key":"C","text":"Catalog Author [sn_catalog_write]"},{"key":"D","text":"Item Admin [sn_item_admin]"}],"answer":["B"],"multi":false},
+{"QuestionId":"374","prompt":"What component of the ServiceNow infrastructure defines every table and field in the system?","options":[{"key":"A","text":"Schema"},{"key":"B","text":"Field Map"},{"key":"C","text":"Table Class Manager"},{"key":"D","text":"Dictionary"},{"key":"E","text":"Data Atlas"}],"answer":["D"],"multi":false},
+{"QuestionId":"375","prompt":"Which data consistency settings can be achieved using UI Policy? (Choose three.)","options":[{"key":"A","text":"Setting fields to accept the data in an expected format"},{"key":"B","text":"Setting fields to accept the data with ‘n’ number of characters"},{"key":"C","text":"Setting fields hidden"},{"key":"D","text":"Settings fields read-only"},{"key":"E","text":"Setting fields mandatory"}],"answer":["C","D","E"],"multi":true},
+{"QuestionId":"376","prompt":"A customer wants to use a client script to validate things on a form in order to make sure the submission makes sense. What type of client script would you recommend to meet this requirement?","options":[{"key":"A","text":"onSubmit()"},{"key":"B","text":"onSubmission()"},{"key":"C","text":"onUpdate()"},{"key":"D","text":"onLoad()"}],"answer":["A"],"multi":false},
+{"QuestionId":"377","prompt":"An order from the Service Catalog has been placed. Two records in the Platform are created as a result. Which two records are associated with this newly ordered item? (Choose two.)","options":[{"key":"A","text":"A record of sc_req_item table"},{"key":"B","text":"A record of sc_task"},{"key":"C","text":"An incident record"},{"key":"D","text":"A change record"},{"key":"E","text":"A problem record"}],"answer":["A","B"],"multi":true},
+{"QuestionId":"378","prompt":"What action will allow you to personalize layouts of columns in a list?","options":[{"key":"A","text":"Context Menu > View > Personalize"},{"key":"B","text":"Click Gear Icon > Personalize window options > Select the appropriate columns"},{"key":"C","text":"Select the column to be personalized and right at the header > Choose the options to personalize"},{"key":"D","text":"Select the column to be personalized > Click Edit icon (Pencil) > Choose the options to personalize"}],"answer":["B"],"multi":false},
+{"QuestionId":"379","prompt":"An order for new office equipment has been placed through the Service Catalog. How would you view the lists of requests after the orders have been placed?","options":[{"key":"A","text":"All > Tables and Columns > Tasks"},{"key":"B","text":"In the Navigation Filter, type \"requests.list\" and press the Enter key"},{"key":"C","text":"All > Service Catalog > Requests"},{"key":"D","text":"All > Service Catalog > Open Records > Items"}],"answer":["D"],"multi":false},
+{"QuestionId":"380","prompt":"Which path would you take to access the table configuration page from a form?","options":[{"key":"A","text":"The Form Context menu > View > Show Table"},{"key":"B","text":"The Form Context menu > View > Table"},{"key":"C","text":"The Form Context menu > Configure > Dictionary"},{"key":"D","text":"The Form Context menu > Configure > Table"}],"answer":["D"],"multi":false},
+{"QuestionId":"381","prompt":"Which admin role is required to make changes to High Security Settings?","options":[{"key":"A","text":"high_sec_admin"},{"key":"B","text":"sn_acl_admin"},{"key":"C","text":"admin"},{"key":"D","text":"security_admin"}],"answer":["D"],"multi":false},
+{"QuestionId":"382","prompt":"What is the most common role that has access to almost all platform features, functions, and data?","options":[{"key":"A","text":"Super User [sn_super_user]"},{"key":"B","text":"Security Admin [security_admin]"},{"key":"C","text":"System Administrator [admin]"},{"key":"D","text":"Base Admin [base_admin]"},{"key":"E","text":"System Manager [sys_manager]"}],"answer":["C"],"multi":false},
+{"QuestionId":"383","prompt":"When moving multiple update sets at one time, what might you do to facilitate the move?","options":[{"key":"A","text":"Preview"},{"key":"B","text":"Batch"},{"key":"C","text":"List"},{"key":"D","text":"Map"}],"answer":["B"],"multi":false},
+{"QuestionId":"384","prompt":"What do you click when you have made modifications to your report, and you want to see the results without saving?","options":[{"key":"A","text":"Preview"},{"key":"B","text":"Test"},{"key":"C","text":"Run"},{"key":"D","text":"Try It"},{"key":"E","text":"Execute"}],"answer":["C"],"multi":false},
+{"QuestionId":"385","prompt":"Which framework can automatically populate values for the Priority and Category fields based on the Short description field value?","options":[{"key":"A","text":"Predictive Intelligence"},{"key":"B","text":"Assignment Rule"},{"key":"C","text":"CSDM"},{"key":"D","text":"Action"},{"key":"E","text":"UI Policy"}],"answer":["A"],"multi":false},
+{"QuestionId":"386","prompt":"Which testing framework is used to test ServiceNow Applications?","options":[{"key":"A","text":"Test Driven Framework (TDF)"},{"key":"B","text":"Junit"},{"key":"C","text":"Selenium"},{"key":"D","text":"Automated Test Framework (ATF)"}],"answer":["D"],"multi":false},
+{"QuestionId":"387","prompt":"Which allows the creation of a task-based record from Service Catalog?","options":[{"key":"A","text":"Assignment Rule"},{"key":"B","text":"Flow Designer"},{"key":"C","text":"UI Builder"},{"key":"D","text":"Record Producers"}],"answer":["D"],"multi":false},
+{"QuestionId":"388","prompt":"What module do you use to access the reports that are available to you?","options":[{"key":"A","text":"Self-Service > My Reports"},{"key":"B","text":"Self-Service > My Dashboards"},{"key":"C","text":"Reports > View / Run"},{"key":"D","text":"Reports > Homepage"},{"key":"E","text":"Reports > Overview"}],"answer":["C"],"multi":false},
+{"QuestionId":"389","prompt":"Security rules are defined to restrict the permissions of users from viewing and interacting with data. What are these security rules called?","options":[{"key":"A","text":"CRUD Rules"},{"key":"B","text":"Access Control Rules"},{"key":"C","text":"Role Assignment Rules"},{"key":"D","text":"Scripted User Rules"},{"key":"E","text":"User Authentication Rules"}],"answer":["B"],"multi":false}
+
+
+
+
+
+
+
+
+ ];
+const quizEl = document.getElementById('quiz');
+
+function render(){
+  quizEl.innerHTML = '';
+  data.forEach((q, qi) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'q';
+    wrapper.dataset.idx = qi;
+    const title = document.createElement('h3');
+    title.textContent = `Pregunta ${qi+1}`;
+	const p = document.createElement('div');
+	p.innerHTML = q.prompt.replace(/\n/g, '<br>');
+	const QuestionId = document.createElement('div');
+    QuestionId.textContent = q.QuestionId;
+    console.log(q)
+    const opts = document.createElement('div');
+    opts.className = 'opts';
+    q.options.forEach(opt => {	 
+	  console.log(' ' + opt)
+      const id = `q${qi}_${opt.key}`;	  
+      const input = document.createElement('input');
+      input.type = q.multi ? 'checkbox' : 'radio';
+      input.name = `q${qi}`;
+      input.value = opt.key;
+      input.id = id;
+      const label = document.createElement('label');
+      label.setAttribute('for', id);
+      label.innerHTML = `<b>${opt.key}.</b> ${opt.text}`;
+      label.prepend(input);
+      opts.appendChild(label);
+    });
+
+    const actions = document.createElement('div');
+    actions.className = 'row-actions';
+    const btn = document.createElement('button');
+    btn.textContent = 'Validar';
+    btn.addEventListener('click', () => checkOne(qi));
+    actions.appendChild(btn);
+
+    const res = document.createElement('div');
+    res.className = 'result';
+    res.id = `res_${qi}`;
+
+
+    wrapper.appendChild(QuestionId);
+    wrapper.appendChild(title);
+    wrapper.appendChild(p);
+    wrapper.appendChild(opts);
+    wrapper.appendChild(actions);
+    wrapper.appendChild(res);
+    quizEl.appendChild(wrapper);
+  })
+}
+
+function checkOne(i){
+  const q = data[i];
+  const sel = Array.from(document.querySelectorAll(`input[name=q${i}]:checked`)).map(n=>n.value).sort();
+  const ans = [...q.answer].sort();
+  const ok = sel.length === ans.length && sel.every((v,j)=>v===ans[j]);
+  const box = document.querySelectorAll('.q')[i];
+  box.classList.remove('correct','incorrect');
+  box.classList.add(ok ? 'correct' : 'incorrect');
+  const res = document.getElementById(`res_${i}`);
+  if(ok){
+    res.textContent = '✔️ ¡Correcto!';
+  } else {
+    res.innerHTML = `❌ Incorrecto. Respuesta correcta: <b>${ans.join(', ')}</b>`;
+  }
+}
+
+function checkAll(){
+  let correct = 0;
+  data.forEach((_, i) => {
+    const before = document.querySelectorAll('.q')[i].classList.contains('correct');
+    checkOne(i);
+    if(document.querySelectorAll('.q')[i].classList.contains('correct')) correct++;
+  });
+  document.getElementById('score').textContent = `Puntaje: ${correct} / ${data.length}`;
+}
+
+function resetAll(){
+  document.querySelectorAll('input[type=checkbox], input[type=radio]').forEach(i=> i.checked = false);
+  document.getElementById('score').textContent='';
+  document.querySelectorAll('.q').forEach(q => q.classList.remove('correct','incorrect'));
+  document.querySelectorAll('.result').forEach(r => r.textContent='');
+}
+
+function shuffle(){
+  // Barajar preguntas y opciones
+  for(let i=data.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [data[i], data[j]] = [data[j], data[i]];
+  }
+  data.forEach(q => {
+    for(let i=q.options.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [q.options[i], q.options[j]] = [q.options[j], q.options[i]];
+    }
+  });
+  render();
+}
+
+render();
+document.getElementById('checkAll').addEventListener('click', checkAll);
+document.getElementById('resetAll').addEventListener('click', resetAll);
+document.getElementById('shuffleBtn').addEventListener('click', shuffle);
+</script>
+</body>
+</html>
